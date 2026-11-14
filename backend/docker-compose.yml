@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: slot-postgres
+    command: postgres -c shared_buffers=32MB -c work_mem=2MB -c maintenance_work_mem=16MB -c max_connections=20
+    environment:
+      POSTGRES_DB: slot
+      POSTGRES_USER: slot
+      POSTGRES_PASSWORD: slot
+    ports:
+      - "5432:5432"
+    volumes:
+      - slot_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slot -d slot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      dockerfile: ${SLOT_DOCKERFILE:-Dockerfile}
+    image: slot-app:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SLOT_DB_URL: jdbc:postgresql://postgres:5432/slot
+      SLOT_DB_USER: slot
+      SLOT_DB_PASSWORD: slot
+      SLOT_COOKIE_SECURE: "false"
+      SLOT_REQUIRE_HTTPS: "false"
+      SLOT_TOMCAT_MAX_THREADS: "20"
+      SLOT_DB_POOL_SIZE: "4"
+    ports:
+      - "${SLOT_FRONTEND_PORT:-4200}:8080"
+      - "8080:8080"
+
+volumes:
+  slot_pg_data:
