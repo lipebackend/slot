@@ -1,0 +1,12 @@
+**/.git
+**/.idea
+**/.vscode
+**/node_modules
+**/dist
+**/.angular
+**/.test-build
+**/target
+**/*.log
+**/.env
+**/.env.*
+!backend/.env.example
